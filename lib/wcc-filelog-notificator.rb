@@ -11,9 +11,17 @@ class FilelogNotificator
 	
 	# Will be called when wcc decides to notify a recipient.
 	def notify!(data)
+		# try to load a template via the wcc main programm
+		tpl = WCC::Prog.load_template 'filelog.erb'
+		if tpl.nil?
+			WCC.logger.warn "File log template 'filelog.erb' not found, using default."
+			msg = "#{data.site.uri.to_s} changed at #{Time.now.to_s}"
+		else
+			msg = tpl.result(binding)
+		end
 		# use the :filelog_file stored in the WCC::Conf
 		File.open(WCC::Conf[:filelog_file], 'a') do |f|
-			f.puts "#{data.site.uri.to_s} changed at #{Time.now.to_s}"
+			f.puts msg
 		end
 	end
 	
